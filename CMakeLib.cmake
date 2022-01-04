@@ -13,6 +13,9 @@ list(APPEND totalcmakefiles "CMakeLib_CommonTools")
 include(CMakeLib_FileOperation)
 list(APPEND totalcmakefiles "CMakeLib_FileOperation")
 
+include(CMakeLib_Project)
+list(APPEND totalcmakefiles "CMakeLib_Project")
+
 
 #Log
 foreach(child ${totalcmakefiles})
