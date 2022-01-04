@@ -73,7 +73,7 @@ macro(CMAKELIB_PROJECT_SETUPPROJECT mode targetname targetsourcesname targetlibn
 #3.TargetLib
 
     if(NOT DEFINED NOTCONTINUE)
-        if(NOT ${STR_TARGET_LIBS} STREQUAL " ")
+        if(NOT ${listtargetlibs} STREQUAL " ")
             target_link_libraries( ${targetname} ${listtargetlibs} )
         endif()
     endif()
