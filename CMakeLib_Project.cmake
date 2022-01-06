@@ -25,7 +25,16 @@ macro(CMAKELIB_PROJECT_GETRELEATEPATH outvariablename)
     set(${outvariablename} ${TMP})
 endmacro()
 
+#获取当前工程对应的工程Folder名称
+macro(CMAKELIB_PROJECT_GETPROJECTFOLERPATH outvariablename)
+    set(localvar "")
+    set(localname "")
+    CMAKELIB_PROJECT_GETRELEATEPATH(localvar)
+    CMAKELIB_FILE_GET_DIR_NAME(localname)
 
+    string(REPLACE "/${localname}" "" TMP ${localvar})
+    set(${outvariablename} ${TMP})
+endmacro()
 
 
 
@@ -48,7 +57,9 @@ macro(CMAKELIB_PROJECT_SETUPPROJECT mode targetname targetsourcesname targetlibn
 	#string(REPLACE " " ";" listtargetlibs ${targetlibname} )
     set(listtargetsources ${${targetsourcesname}})
     set(listtargetlibs ${${targetlibname}})
-    #message(STATUS ${targetname})
+
+
+   # message(STATUS ${listtargetlibs})
 
 #1.First Gen Target
     if(${mode} STREQUAL "exe")
@@ -66,14 +77,14 @@ macro(CMAKELIB_PROJECT_SETUPPROJECT mode targetname targetsourcesname targetlibn
 
     if(NOT DEFINED NOTCONTINUE)
         #2.1设置对应的文件Folder目录
-        CMAKELIB_PROJECT_GETRELEATEPATH(localfolder)
+        CMAKELIB_PROJECT_GETPROJECTFOLERPATH(localfolder)
         set_target_properties(${targetname} PROPERTIES FOLDER ${localfolder})
     endif()
 
 #3.TargetLib
 
     if(NOT DEFINED NOTCONTINUE)
-        if(NOT ${listtargetlibs} STREQUAL " ")
+        if(NOT listtargetlibs STREQUAL " ")
             target_link_libraries( ${targetname} ${listtargetlibs} )
         endif()
     endif()
