@@ -11,10 +11,10 @@
 #获取当前的工作目录的名称
 #参数 outvariablename 将对应的${outvariablename} 变量设置为字符串匹配的值
 #使用的规则为 ${CMAKE_CURRENT_SOURCE_DIR} CMAKE当前工作的源文件目录, 通过后端匹配正则字符串的形式来进行匹配
-macro(CMAKELIB_FILE_GET_DIR_NAME outvariablename)
+function(CMAKELIB_FILE_GET_DIR_NAME outvariablename)
     string(REGEX MATCH "([^/]*)$" TMP ${CMAKE_CURRENT_SOURCE_DIR})
-    set(${outvariablename} ${TMP})
-endmacro(CMAKELIB_FILE_GET_DIR_NAME)
+    set(${outvariablename} ${TMP} PARENT_SCOPE)
+endfunction(CMAKELIB_FILE_GET_DIR_NAME)
 
 
 
@@ -65,36 +65,84 @@ endmacro(CMAKELIB_FILE_GET_DIR_NAME)
 #获取当前工作目录下所有的子目录的名称
 #参数 outvariablename 将对应的${outvariablename} 变量设置为字符串
 
-macro(CMAKELIB_FILE_GET_ALL_SUBDIR outvariablename)
+function(CMAKELIB_FILE_GET_ALL_SUBDIR outvariablename)
     file(GLOB _children RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/*)
-	set(${outvariablename}} "")
+	set(${outvariablename} "")
 	foreach(_child ${_children})
 		if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${_child})
 			list(APPEND ${outvariablename} ${_child})
 		endif()
 	endforeach()
-endmacro(CMAKELIB_FILE_GET_ALL_SUBDIR)
+	set(${outvariablename} ${${outvariablename}} PARENT_SCOPE)
+endfunction(CMAKELIB_FILE_GET_ALL_SUBDIR)
 
 
 #获取当前目录下所有的文件
-macro(CMAKELIB_FILE_GET_ALL_SUBFILE outvariablename)
+function(CMAKELIB_FILE_GET_ALL_SUBFILE outvariablename)
 	file(GLOB _children RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/*)
-		set(${outvariablename}} "")
-		foreach(_child ${_children})
-			if(NOT IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${_child})
-				list(APPEND ${outvariablename} ${_child})
-			endif()
-		endforeach()
-endmacro(CMAKELIB_FILE_GET_ALL_SUBFILE)
+	set(${outvariablename} "" PARENT_SCOPE)
+	foreach(_child ${_children})
+		if(NOT IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${_child})
+			list(APPEND ${outvariablename} ${_child} PARENT_SCOPE)
+		endif()
+	endforeach()
+	set(${outvariablename} ${${outvariablename}} PARENT_SCOPE)
+endfunction(CMAKELIB_FILE_GET_ALL_SUBFILE)
 
 
 #获取当前文件下以对应.filter 对应的文件
-macro(CMAKELIB_FILE_GET_ALL_SUBFILE_Filter outvariablename filter)
-	file(GLOB _children RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/*.filter)
-	set(${outvariablename}} "")
+function(CMAKELIB_FILE_GET_ALL_SUBFILE_FILTER outvariablename filter)
+	file(GLOB _children RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/*)
+	set(${outvariablename} "")
+	foreach(_child ${_children})
+		if(NOT IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${_child})
+			list(APPEND ${outvariablename} ${_child})
+			#message(STATUS ${_child})
+		endif()
+	endforeach()
+	list(FILTER ${outvariablename} INCLUDE REGEX ${filter})
+	set(${outvariablename} ${${outvariablename}} PARENT_SCOPE)
+
+endfunction(CMAKELIB_FILE_GET_ALL_SUBFILE_FILTER)
+
+#获取当前文件下所有目录 循环
+function(CMAKELIB_FILE_GET_ALL_SUBDIR_RECURSE outvariablename)
+    file(GLOB_RECURSE _children LIST_DIRECTORIES true RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/*)
+	set(${outvariablename} "")
+	foreach(_child ${_children})
+		if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${_child})
+			list(APPEND ${outvariablename} ${_child})
+		endif()
+	endforeach()
+	set(${outvariablename} ${${outvariablename}} PARENT_SCOPE)
+endfunction(CMAKELIB_FILE_GET_ALL_SUBDIR_RECURSE)
+
+#获取当前目录下所有文件 循环
+function(CMAKELIB_FILE_GET_ALL_SUBFILE_RECURSE outvariablename)
+	file(GLOB_RECURSE  _children LIST_DIRECTORIES true RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/*)
+	set(${outvariablename} "")
 	foreach(_child ${_children})
 		if(NOT IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${_child})
 			list(APPEND ${outvariablename} ${_child})
 		endif()
 	endforeach()
-endmacro(CMAKELIB_FILE_GET_ALL_SUBFILE_Filter)
+	set(${outvariablename} ${${outvariablename}} PARENT_SCOPE)
+endfunction(CMAKELIB_FILE_GET_ALL_SUBFILE_RECURSE)
+
+
+#获取当前目录下所有文件 循环 filter
+function(CMAKELIB_FILE_GET_ALL_SUBFILE_RECURSE_FILTER outvariablename subfolder filter)
+	file(GLOB_RECURSE  _children LIST_DIRECTORIES true RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder} ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder}/*)
+	set(${outvariablename} "")
+	foreach(_child ${_children})
+		#message(STATUS ${_child})
+		if(NOT IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${subfolder}/${_child})
+			list(APPEND ${outvariablename} ${subfolder}/${_child})
+			#message(STATUS ${subfolder}/${_child})
+		endif()
+	endforeach()
+
+	list(FILTER ${outvariablename} INCLUDE REGEX ${filter})
+	set(${outvariablename} ${${outvariablename}} PARENT_SCOPE)
+endfunction(CMAKELIB_FILE_GET_ALL_SUBFILE_RECURSE_FILTER)
+
