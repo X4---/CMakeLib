@@ -48,15 +48,76 @@ endmacro()
 
 
 
+#设CMAKELIB_PROJECT_SET置对应的Target CMakeLib 依赖
+
+macro(CMAKELIB_PROJECT_ADD_LINKTARGET_PUBLIC linkname)
+    
+    set(LocalDirName "")
+    if(DEFINED CUSTOMTARGETNAME)
+        set(LocalTargetName ${CUSTOMTARGETNAME})
+    else()
+        CMAKELIB_FILE_GET_DIR_NAME(LocalDirName)
+        set(LocalTargetName ${LocalDirName})
+    endif()
+    set(CMAKELIB_LINK_PUBLIC_${LocalTargetName} "${CMAKELIB_LINK_PUBLIC_${LocalTargetName}};${linkname}")
+
+    if(NOT DEFINED CMAKELIB_LINK_PUBLIC_${LocalTargetName})
+        set(CMAKELIB_LINK_PUBLIC_${LocalTargetName} "${linkname}")
+    else()
+        set(CMAKELIB_LINK_PUBLIC_${LocalTargetName} "${CMAKELIB_LINK_PUBLIC_${LocalTargetName}};${linkname}")
+    endif()
+
+endmacro()
+
+
+macro(CMAKELIB_PROJECT_ADD_LINKTARGET_PRIVATE linkname)
+
+    set(LocalDirName "")
+    if(DEFINED CUSTOMTARGETNAME)
+        set(LocalTargetName ${CUSTOMTARGETNAME})
+    else()
+        CMAKELIB_FILE_GET_DIR_NAME(LocalDirName)
+        set(LocalTargetName ${LocalDirName})
+    endif()
+
+    if(NOT DEFINED CMAKELIB_LINK_PRIVATE_${LocalTargetName})
+        set(CMAKELIB_LINK_PRIVATE_${LocalTargetName} "${linkname}")
+    else()
+        set(CMAKELIB_LINK_PRIVATE_${LocalTargetName} "${CMAKELIB_LINK_PRIVATE_${LocalTargetName}};${linkname}")
+    endif()
+
+    
+
+endmacro()
+
+
+macro(CMAKELIB_PROJECT_ADD_LINKTARGET_INTERFACE linkname)
+
+    set(LocalDirName "")
+    if(DEFINED CUSTOMTARGETNAME)
+        set(LocalTargetName ${CUSTOMTARGETNAME})
+    else()
+        CMAKELIB_FILE_GET_DIR_NAME(LocalDirName)
+        set(LocalTargetName ${LocalDirName})
+    endif()
+
+    if(NOT DEFINED CMAKELIB_LINK_INTERFACE_${LocalTargetName})
+        set(CMAKELIB_LINK_INTERFACE_${LocalTargetName} "${linkname}")
+    else()
+        set(CMAKELIB_LINK_INTERFACE_${LocalTargetName} "${CMAKELIB_LINK_INTERFACE_${LocalTargetName}};${linkname}")
+    endif()
+
+endmacro()
+
+
 #生成对应的工程
-macro(CMAKELIB_PROJECT_SETUPPROJECT mode targetname targetsourcesname targetlibname)
+macro(CMAKELIB_PROJECT_SETUPPROJECT mode targetname targetsourcesname)
 
 #0.Process Input
 
 	#string(REPLACE " " ";" listtargetsources {${targetsourcesname} )
 	#string(REPLACE " " ";" listtargetlibs ${targetlibname} )
     set(listtargetsources ${${targetsourcesname}})
-    set(listtargetlibs ${${targetlibname}})
 
 
 #0.将当前的目录设置为对应的Project组织的根目录
@@ -83,11 +144,73 @@ macro(CMAKELIB_PROJECT_SETUPPROJECT mode targetname targetsourcesname targetlibn
         set_target_properties(${targetname} PROPERTIES FOLDER ${localfolder})
     endif()
 
-#3.TargetLib
+
+#3.TargetInclude
+
     if(NOT DEFINED NOTCONTINUE)
-        if(NOT listtargetlibs STREQUAL " ")
-            target_link_libraries( ${targetname} ${listtargetlibs} )
+        set(LocalFetchPublicTargetIncludevarname CMAKELIB_INCLUDE_PUBLIC_${targetname})
+        if(DEFINED ${LocalFetchPublicTargetIncludevarname})
+            foreach( folder ${${LocalFetchPublicTargetIncludevarname}})
+
+                #message(STATUS publicfolder  " " ${folder})
+                target_include_directories(${targetname} PUBLIC ${folder})
+
+            endforeach()
         endif()
+
+        set(LocalFetchPrivateTargetIncludevarname CMAKELIB_INCLUDE_PRIVATE_${targetname})
+        if(DEFINED ${LocalFetchPrivateTargetIncludevarname})
+            foreach( folder ${${LocalFetchPrivateTargetIncludevarname}})
+
+                #message(STATUS privatefolder  " " ${folder})
+                target_include_directories(${targetname} PRIVATE ${folder})
+            endforeach()
+        endif()
+
+        set(LocalFetchInterfaceTargetIncludevarname CMAKELIB_INCLUDE_INTERFACE_${targetname})
+        if(DEFINED ${LocalFetchInterfaceTargetIncludevarname})
+            foreach( folder ${${LocalFetchInterfaceTargetIncludevarname}})
+                #message(STATUS interfacefolder  " " ${folder})
+                target_include_directories(${targetname} INTERFACE ${folder})
+            endforeach()
+        endif()
+
+    endif()
+
+
+#4.TargetLib
+    if(NOT DEFINED NOTCONTINUE)
+    set(LocalFetchPublicTargetLinkvarname CMAKELIB_LINK_PUBLIC_${targetname})
+    if(DEFINED ${LocalFetchPublicTargetLinkvarname})
+        foreach( target ${${LocalFetchPublicTargetLinkvarname}})
+
+            #message(STATUS publiclink  " " ${target})
+            target_link_libraries(${targetname} PUBLIC ${target})
+
+        endforeach()
+    endif()
+
+    set(LocalFetchPrivateTargetLinkvarname CMAKELIB_LINK_PRIVATE_${targetname})
+    if(DEFINED ${LocalFetchPrivateTargetLinkvarname})
+        foreach( target ${${LocalFetchPrivateTargetLinkvarname}})
+
+            #message(STATUS publiclink  " " ${target})
+            target_link_libraries(${targetname} PRIVATE ${target})
+
+
+        endforeach()
+    endif()
+
+    set(LocalFetchInterfaceTargetLinkvarname CMAKELIB_LINK_INTERFACE_${targetname})
+    if(DEFINED ${LocalFetchInterfaceTargetLinkvarname})
+        foreach( target ${${LocalFetchInterfaceTargetLinkvarname}})
+
+            #message(STATUS interfacelink  " " ${target})
+            target_link_libraries(${targetname} INTERFACE ${target})
+
+        endforeach()
+    endif()
+
     endif()
 
 
@@ -129,8 +252,13 @@ macro(CMAKE_PROJECT_DEFAULT_SETUP_EXE)
 
 #5.SetAllFiles
     set(LocalSrcFiles ${LocalFiles} ${LocalPublicFiles} ${LocalPrivateFiles})
+
+#6.Set CMakeLibVariable
+    set(CMAKELIB_INCLUDE_PUBLIC_${LocalTargetName} Public)
+    set(CMAKELIB_INCLUDE_PRIVATE_${LocalTargetName} Private)
+    set(CMAKELIB_INCLUDE_INTERFACE_${LocalTargetName} Interface)
 #6.SetUPProject
-    CMAKELIB_PROJECT_SETUPPROJECT( exe ${LocalTargetName} LocalSrcFiles "")
+    CMAKELIB_PROJECT_SETUPPROJECT( exe ${LocalTargetName} LocalSrcFiles )
 endmacro(CMAKE_PROJECT_DEFAULT_SETUP_EXE)
 
 
