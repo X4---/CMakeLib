@@ -212,7 +212,20 @@ macro(CMAKELIB_PROJECT_SETUPPROJECT mode targetname targetsourcesname)
     endif()
 
     endif()
+#5.TargetCompileDefine
 
+    if(${mode} STREQUAL "exe")
+        
+    elseif(${mode} STREQUAL "bin")
+       
+    elseif(${mode} STREQUAL "dll")
+        target_compile_definitions( ${targetname} INTERFACE ${target}_IMPORT)
+        target_compile_definitions( ${targetname} PRIVATE ${target}_EXPORT)
+    elseif(${mode} STREQUAL "source")
+
+    else()
+
+    endif()
 
 endmacro(CMAKELIB_PROJECT_SETUPPROJECT)
 
@@ -261,6 +274,46 @@ macro(CMAKE_PROJECT_DEFAULT_SETUP_EXE)
     CMAKELIB_PROJECT_SETUPPROJECT( exe ${LocalTargetName} LocalSrcFiles )
 endmacro(CMAKE_PROJECT_DEFAULT_SETUP_EXE)
 
+
+macro(CMAKE_PROJECT_DEFAULT_SETUP_SHARED_LIB)
+
+#0.Get FolderName And Set it to LocalTargetName
+    set(LocalDirName "")
+    if(DEFINED CUSTOMTARGETNAME)
+        set(LocalTargetName ${CUSTOMTARGETNAME})
+    else()
+        CMAKELIB_FILE_GET_DIR_NAME(LocalDirName)
+        set(LocalTargetName ${LocalDirName})
+    endif()
+#1.Get FileFilter And Set it to Local
+    set(LocalFileFilter ".*h|.*cpp")
+    if(DEFINED CUSTOMFILEFILTER)
+        set(LocalFileFilter ${CUSTOMFILEFILTER})
+    else()
+        set(LocalFileFilter ".*h|.*cpp")
+    endif()
+#2.GetPublicFiles
+    set(LocalPublicFiles "")    
+    CMAKELIB_FILE_GET_ALL_SUBFILE_RECURSE_FILTER( LocalPublicFiles Public ${LocalFileFilter})
+#3.GetPrivateFiles
+    set(LocalPrivateFiles "")
+    CMAKELIB_FILE_GET_ALL_SUBFILE_RECURSE_FILTER( LocalPrivateFiles Private ${LocalFileFilter})
+#4.GetCurDir
+    set(LocalFiles "")
+    CMAKELIB_FILE_GET_ALL_SUBFILE_FILTER( LocalFiles ${LocalFileFilter})
+#4.GetInterfaceFiles
+
+#5.SetAllFiles
+    set(LocalSrcFiles ${LocalFiles} ${LocalPublicFiles} ${LocalPrivateFiles})
+#6.Set CMakeLibVariable
+    set(CMAKELIB_INCLUDE_PUBLIC_${LocalTargetName} Public)
+    set(CMAKELIB_INCLUDE_PRIVATE_${LocalTargetName} Private)
+    set(CMAKELIB_INCLUDE_INTERFACE_${LocalTargetName} Interface)
+#6.SetUPproject
+    CMAKELIB_PROJECT_SETUPPROJECT( dll ${LocalTargetName} LocalSrcFiles )
+    
+
+endmacro(CMAKE_PROJECT_DEFAULT_SETUP_SHARED_LIB)
 
 
 
