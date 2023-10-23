@@ -109,6 +109,10 @@ macro(CMAKELIB_PROJECT_ADD_LINKTARGET_INTERFACE linkname)
 
 endmacro()
 
+#设置对应的跟输出目录
+macro(CMAKELIB_PROJECT_SET_OUTPUT_DIR outputdir)    
+    set(CUSTOM_OUT_BINARY ${outputdir})
+endmacro()
 
 #生成对应的工程
 macro(CMAKELIB_PROJECT_SETUPPROJECT mode targetname targetsourcesname)
@@ -141,9 +145,18 @@ macro(CMAKELIB_PROJECT_SETUPPROJECT mode targetname targetsourcesname)
     if(NOT DEFINED NOTCONTINUE)
         #2.1设置对应的文件Folder目录
         CMAKELIB_PROJECT_GETPROJECTFOLERPATH(localfolder)
+        CMAKELIB_COMMON_LOG("${targetname} in folder :${localfolder}")
         set_target_properties(${targetname} PROPERTIES FOLDER ${localfolder})
     endif()
 
+    if(DEFINED CUSTOM_OUT_BINARY)
+        #2.2设置对应的输出目录
+        CMAKELIB_COMMON_LOG("${targetname} in Output :${CUSTOM_OUT_BINARY}")
+        set_target_properties(${targetname} PROPERTIES
+            ARCHIVE_OUTPUT_DIRECTORY "${CUSTOM_OUT_BINARY}"
+            LIBRARY_OUTPUT_DIRECTORY "${CUSTOM_OUT_BINARY}"
+            RUNTIME_OUTPUT_DIRECTORY "${CUSTOM_OUT_BINARY}")
+    endif()
 
 #3.TargetInclude
 
@@ -219,8 +232,8 @@ macro(CMAKELIB_PROJECT_SETUPPROJECT mode targetname targetsourcesname)
     elseif(${mode} STREQUAL "bin")
        
     elseif(${mode} STREQUAL "dll")
-        target_compile_definitions( ${targetname} INTERFACE ${target}_IMPORT)
-        target_compile_definitions( ${targetname} PRIVATE ${target}_EXPORT)
+        target_compile_definitions( ${targetname} INTERFACE ${targetname}_IMPORT )
+        target_compile_definitions( ${targetname} PRIVATE ${targetname}_EXPORT )
     elseif(${mode} STREQUAL "source")
 
     else()
